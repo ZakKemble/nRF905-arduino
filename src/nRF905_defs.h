@@ -1,9 +1,9 @@
 /*
- * Project: nRF905 AVR/Arduino Library/Driver
- * Author: Zak Kemble, contact@zakkemble.co.uk
- * Copyright: (C) 2017 by Zak Kemble
+ * Project: nRF905 Radio Library for Arduino
+ * Author: Zak Kemble, contact@zakkemble.net
+ * Copyright: (C) 2020 by Zak Kemble
  * License: GNU GPL v3 (see License.txt)
- * Web: http://blog.zakkemble.co.uk/nrf905-avrarduino-librarydriver/
+ * Web: https://blog.zakkemble.net/nrf905-avrarduino-librarydriver/
  */
 
 #ifndef NRF905_DEFS_H_
@@ -62,132 +62,33 @@
 #define NRF905_STATUS_DR		5
 #define NRF905_STATUS_AM		7
 
-#include "nRF905_config.h"
-
-#if (NRF905_DR_SW && NRF905_INTERRUPTS)
-	#error "NRF905_INTERRUPTS and NRF905_DR_SW cannot both be enabled"
-#elif (NRF905_AM_SW && NRF905_INTERRUPTS_AM)
-	#error "NRF905_INTERRUPTS_AM and NRF905_AM_SW cannot both be enabled"
-#elif (!NRF905_INTERRUPTS && NRF905_INTERRUPTS_AM)
-	#error "NRF905_INTERRUPTS_AM cannot be enabled without NRF905_INTERRUPTS"
-#endif
-
-#ifndef ARDUINO
-
-	#define CONCAT(a, b) a ## b
-	#define CONCAT2(a, b, c) a ## b ## c
-
-	#define PORT(port)			CONCAT(PORT, port)
-	#define PORTBIT(port, bit)	CONCAT2(PORT, port, bit)
-	#define DDR(port)			CONCAT(DDR, port)
-	#define PINPORT(port)		CONCAT(PIN, port)
-	#define PINBIT(port, bit)	CONCAT2(PIN, port, bit)
-	#define PCINT(pcint)		CONCAT(PCINT, pcint)
-
-	#define TRX_EN_DDR		DDR(NRF905_TRX_EN_PORT)
-	#define TRX_EN_PORT		PORT(NRF905_TRX_EN_PORT)
-	#define TRX_EN_BIT		PORTBIT(NRF905_TRX_EN_PORT, NRF905_TRX_EN_BIT)
-
-	#define PWR_MODE_DDR	DDR(NRF905_PWR_MODE_PORT)
-	#define PWR_MODE_PORT	PORT(NRF905_PWR_MODE_PORT)
-	#define PWR_MODE_BIT	PORTBIT(NRF905_PWR_MODE_PORT, NRF905_PWR_MODE_BIT)
-
-	#define TX_EN_DDR		DDR(NRF905_TX_EN_PORT)
-	#define TX_EN_PORT		PORT(NRF905_TX_EN_PORT)
-	#define TX_EN_BIT		PORTBIT(NRF905_TX_EN_PORT, NRF905_TX_EN_BIT)
-
-	#define CD_DDR			DDR(NRF905_CD_PORT)
-	#define CD_PORT			PINPORT(NRF905_CD_PORT)
-	#define CD_BIT			PINBIT(NRF905_CD_PORT, NRF905_CD_BIT)
-
-	#define AM_DDR			DDR(NRF905_AM_PORT)
-	#define AM_PORT			PINPORT(NRF905_AM_PORT)
-	#define AM_BIT			PINBIT(NRF905_AM_PORT, NRF905_AM_BIT)
-
-	#define DR_DDR			DDR(NRF905_DR_PORT)
-	#define DR_PORT			PINPORT(NRF905_DR_PORT)
-	#define DR_BIT			PINBIT(NRF905_DR_PORT, NRF905_DR_BIT)
-
-	#define CSN_DDR			DDR(NRF905_CSN_PORT)
-	#define CSN_PORT		PORT(NRF905_CSN_PORT)
-	#define CSN_BIT			PORTBIT(NRF905_CSN_PORT, NRF905_CSN_BIT)
-
-	
-
-	#define INTCONCAT(num)		CONCAT(INT, num)
-	#define ISCCONCAT(num, bit)	CONCAT2(ISC, num, bit)
-	#define INTVECTCONCAT(num)	CONCAT2(INT, num, _vect)
-/*
-	#ifndef NRF905_REG_EXTERNAL_INT_DR
-		#ifdef EIMSK
-			#define NRF905_REG_EXTERNAL_INT_DR EIMSK
-		#elif defined GICR
-			#define NRF905_REG_EXTERNAL_INT_DR GICR
-		#else
-			#define NRF905_REG_EXTERNAL_INT_DR GIMSK
-		#endif
-	#endif
+/**
+* @brief Save a few mA by reducing receive sensitivity.
 */
-	#ifndef NRF905_REG_EXTERNAL_INT_CTL_DR
-		#ifdef EICRA
-			#if NRF905_INTERRUPT_NUM_DR < 4
-				#define NRF905_REG_EXTERNAL_INT_CTL_DR EICRA
-			#else
-				#define NRF905_REG_EXTERNAL_INT_CTL_DR EICRB
-			#endif
-		#else
-			#define NRF905_REG_EXTERNAL_INT_CTL_DR MCUCR
-		#endif
-	#endif
-/*
-	#ifndef NRF905_BIT_EXTERNAL_INT_DR
-		#define NRF905_BIT_EXTERNAL_INT_DR INTCONCAT(NRF905_INTERRUPT_NUM_DR)
-	#endif
+typedef enum
+{
+	NRF905_LOW_RX_DISABLE = 0x00,	///< Disable low power receive
+	NRF905_LOW_RX_ENABLE = 0x10		///< Enable low power receive
+} nRF905_low_rx_t;
+
+/**
+* @brief Auto re-transmit options.
 */
-	#ifndef NRF905_BIT_EXTERNAL_INT_CTL_DR
-		#define NRF905_BIT_EXTERNAL_INT_CTL_DR (_BV(ISCCONCAT(NRF905_INTERRUPT_NUM_DR, 1))|_BV(ISCCONCAT(NRF905_INTERRUPT_NUM_DR, 0))) // Rising
-	#endif
+typedef enum
+{
+	NRF905_AUTO_RETRAN_DISABLE = 0x00,	///< Disable auto re-transmit
+	NRF905_AUTO_RETRAN_ENABLE = 0x20	///< Enable auto re-transmit
+} nRF905_auto_retran_t;
 
-	#ifndef NRF905_INT_VECTOR_DR
-		#define NRF905_INT_VECTOR_DR INTVECTCONCAT(NRF905_INTERRUPT_NUM_DR)
-	#endif
-
-
-/*
-	#ifndef NRF905_REG_EXTERNAL_INT_AM
-		#ifdef EIMSK
-			#define NRF905_REG_EXTERNAL_INT_AM EIMSK
-		#elif defined GICR
-			#define NRF905_REG_EXTERNAL_INT_AM GICR
-		#else
-			#define NRF905_REG_EXTERNAL_INT_AM GIMSK
-		#endif
-	#endif
+/**
+* @brief Address size.
+*
+* This is actually used as the SYNC word
 */
-	#ifndef NRF905_REG_EXTERNAL_INT_CTL_AM
-		#ifdef EICRA
-			#if NRF905_INTERRUPT_NUM_AM < 4
-				#define NRF905_REG_EXTERNAL_INT_CTL_AM EICRA
-			#else
-				#define NRF905_REG_EXTERNAL_INT_CTL_AM EICRB
-			#endif
-		#else
-			#define NRF905_REG_EXTERNAL_INT_CTL_AM MCUCR
-		#endif
-	#endif
-/*
-	#ifndef NRF905_BIT_EXTERNAL_INT_AM
-		#define NRF905_BIT_EXTERNAL_INT_AM INTCONCAT(NRF905_INTERRUPT_NUM_AM)
-	#endif
-*/
-	#ifndef NRF905_BIT_EXTERNAL_INT_CTL_AM
-		#define NRF905_BIT_EXTERNAL_INT_CTL_AM (_BV(ISCCONCAT(NRF905_INTERRUPT_NUM_AM, 0))) // Any change
-	#endif
-
-	#ifndef NRF905_INT_VECTOR_AM
-		#define NRF905_INT_VECTOR_AM INTVECTCONCAT(NRF905_INTERRUPT_NUM_AM)
-	#endif
-
-#endif
+typedef enum
+{
+	NRF905_ADDR_SIZE_1 = 0x01,	///< 1 byte (not recommended, a lot of false invalid packets will be received)
+	NRF905_ADDR_SIZE_4 = 0x04,	///< 4 bytes
+} nRF905_addr_size_t;
 
 #endif /* NRF905_DEFS_H_ */
