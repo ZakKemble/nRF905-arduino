@@ -1,66 +1,69 @@
 /*
- * Project: nRF905 AVR/Arduino Library/Driver (Debug example)
- * Author: Zak Kemble, contact@zakkemble.co.uk
- * Copyright: (C) 2017 by Zak Kemble
+ * Project: nRF905 Radio Library for Arduino (Debug example)
+ * Author: Zak Kemble, contact@zakkemble.net
+ * Copyright: (C) 2020 by Zak Kemble
  * License: GNU GPL v3 (see License.txt)
- * Web: http://blog.zakkemble.co.uk/nrf905-avrarduino-librarydriver/
+ * Web: https://blog.zakkemble.net/nrf905-avrarduino-librarydriver/
  */
 
 /*
  * Read configuration registers
- *
- * 7 -> CE
- * 8 -> PWR
- * 9 -> TXE
- * 4 -> CD
- * 3 -> DR
- * 2 -> AM
- * 10 -> CSN
- * 12 -> SO
- * 11 -> SI
- * 13 -> SCK
  */
 
 #include <nRF905.h>
 #include <nRF905_defs.h>
+#include <SPI.h>
 
-#define RXADDR 0xFE4CA6E5 // Address of this device
+nRF905 transceiver = nRF905();
+
+// Don't modify these 2 functions. They just pass the DR/AM interrupt to the correct nRF905 instance.
+void nRF905_int_dr(){transceiver.interrupt_dr();}
+void nRF905_int_am(){transceiver.interrupt_am();}
 
 void setup()
 {
-	// Start up
-	nRF905_init();
-	
-	// Set address of this device
-	nRF905_setListenAddress(RXADDR);
-
-	// Put into receive mode
-	nRF905_RX();
-
 	Serial.begin(115200);
+
+	SPI.begin();
+
+	transceiver.begin(
+		SPI, // SPI bus to use (SPI, SPI1, SPI2 etc)
+		10000000, // SPI Clock speed (10MHz)
+		6, // SPI SS
+		7, // CE (standby)
+		9, // TRX (RX/TX mode)
+		8, // PWR (power down)
+		4, // CD (collision avoid)
+		3, // DR (data ready)
+		2, // AM (address match)
+		nRF905_int_dr, // Interrupt function for DR
+		nRF905_int_am // Interrupt function for AM
+	);
+
 	Serial.println(F("Started"));
 }
 
 void loop()
 {
 	byte regs[NRF905_REGISTER_COUNT];
-	nRF905_getConfigRegisters(regs);
+	transceiver.getConfigRegisters(regs);
+
 	Serial.print(F("Raw: "));
 
-	byte dataValid = 0;
-		
+	byte dataInvalid = 0;
+
 	for(byte i=0;i<NRF905_REGISTER_COUNT;i++)
 	{
 		Serial.print(regs[i]);
 		Serial.print(F(" "));
 		if(regs[i] == 0xFF || regs[i] == 0x00)
-			dataValid++;
+			dataInvalid++;
 	}
 
 	Serial.println();
-		
+
 	// Registers were all 0xFF or 0x00,  this is probably bad
-	if(dataValid >= NRF905_REGISTER_COUNT)
+	if(dataInvalid >= NRF905_REGISTER_COUNT)
 	{
 		Serial.println(F("All registers read as 0xFF or 0x00! Is the nRF905 connected correctly?"));
 		delay(1000);
