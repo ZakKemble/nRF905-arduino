@@ -1,4 +1,8 @@
 2020-11-01:
+	- Version 4.0.1
+	- Fixed issue with SPI.usingInterrupts() not being supported on ESP platforms
+
+2020-11-01:
 	- Version 4.0.0
 	- Re-written in C++ with full Arduino compatibility. Original AVR C version can be found here https://github.com/zkemble/nRF905
 
