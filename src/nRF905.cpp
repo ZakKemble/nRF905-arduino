@@ -26,6 +26,10 @@ static const uint8_t config[] PROGMEM = {
 
 inline uint8_t nRF905::cselect()
 {
+#if defined(ESP32) || defined(ESP8266)
+	if(!isrBusy)
+		noInterrupts();
+#endif
 	spi.beginTransaction(spiSettings);
 	digitalWrite(csn, LOW);
 	return 1;
@@ -35,6 +39,10 @@ inline uint8_t nRF905::cdeselect()
 {
 	digitalWrite(csn, HIGH);
 	spi.endTransaction();
+#if defined(ESP32) || defined(ESP8266)
+	if(!isrBusy)
+		interrupts();
+#endif
 	return 0;
 }
 
@@ -209,8 +217,13 @@ void nRF905::begin(
 	if(pwr != NRF905_PIN_UNUSED)
 		pinMode(pwr, OUTPUT);
 
-	spi.usingInterrupt(digitalPinToInterrupt(dr));
-	spi.usingInterrupt(digitalPinToInterrupt(am));
+#if !defined(ESP32) && !defined(ESP8266)
+	// SPI.usingInterrupts() is not supported on ESP platforms. More info: https://github.com/zkemble/nRF905-arduino/issues/1
+	if(dr != NRF905_PIN_UNUSED)
+		spi.usingInterrupt(digitalPinToInterrupt(dr));
+	if(am != NRF905_PIN_UNUSED)
+		spi.usingInterrupt(digitalPinToInterrupt(am));
+#endif
 
 	powerOn(false);
 	standbyMode(true);
@@ -230,7 +243,9 @@ void nRF905::begin(
 
 void nRF905::otherSPIinterrupts()
 {
+#if !defined(ESP32) && !defined(ESP8266)
 	spi.usingInterrupt(255);
+#endif
 }
 
 void nRF905::events(
@@ -580,6 +595,10 @@ void nRF905::interrupt_dr()
 {
 	// If DR && AM = RX new packet
 	// If DR && !AM = TX finished
+	
+#if defined(ESP32) || defined(ESP8266)
+	isrBusy = 1;
+#endif
 
 	if(addressMatched())
 	{
@@ -592,11 +611,19 @@ void nRF905::interrupt_dr()
 		if(onTxComplete != NULL)
 			onTxComplete(this);
 	}
+
+#if defined(ESP32) || defined(ESP8266)
+	isrBusy = 0;
+#endif
 }
 
 void nRF905::interrupt_am()
 {
 	// If AM goes HIGH then LOW without DR going HIGH then we got a bad packet
+
+#if defined(ESP32) || defined(ESP8266)
+	isrBusy = 1;
+#endif
 
 	if(addressMatched())
 	{
@@ -609,6 +636,10 @@ void nRF905::interrupt_am()
 			onRxInvalid(this);
 	}
 	validPacket = 0;
+
+#if defined(ESP32) || defined(ESP8266)
+	isrBusy = 0;
+#endif
 }
 
 void nRF905::poll()

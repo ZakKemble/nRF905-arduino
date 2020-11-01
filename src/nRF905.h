@@ -101,6 +101,10 @@ class nRF905 //: public Stream // TODO see Wire library
 private:
 	SPIClass spi;
 	SPISettings spiSettings;
+
+#if defined(ESP32) || defined(ESP8266)
+	volatile uint8_t isrBusy;
+#endif
 	
 	// Pins
 	uint8_t csn; // SPI SS
