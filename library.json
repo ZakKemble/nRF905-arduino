@@ -1,0 +1,21 @@
+{
+  "name": "nRF905 Radio Library",
+  "version": "4.0.1",
+  "keywords": "Arduino, Communication, nRF905, Nordic, 433Mhz, 868Mhz, 915Mhz, STM32, ESP8266, NodeMCU, ESP32, M5Stack",
+  "description": "nRF905 Radio Library for Arduino",
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/zkemble/nRF905-arduino"
+  },
+  "authors":
+  [
+    {
+        "name": "Zak Kemble",
+        "email": "contact@zakkemble.net",
+        "maintainer": true
+    }
+  ],
+  "frameworks": "arduino",
+  "platforms": "*"
+}
