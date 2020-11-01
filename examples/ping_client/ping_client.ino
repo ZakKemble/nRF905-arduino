@@ -52,6 +52,8 @@ void setup()
 {
 	Serial.begin(115200);
 	
+	Serial.println(F("Client starting..."));
+	
 	pinMode(LED, OUTPUT);
 
 	// standby off

@@ -6,22 +6,33 @@
  * Web: https://blog.zakkemble.net/nrf905-avrarduino-librarydriver/
  */
 
-// TODO requires 5 wires
+// This examples requires the low power library from https://github.com/rocketscream/Low-Power
+
+// This examples configures the nRF905 library to only use 5 connections:
 // MOSI
 // MISO
 // SCK
-// SS
-// DR
+// SS -> 6
+// DR -> 3
 
-// https://github.com/rocketscream/Low-Power
+// The following pins on the nRF905 must be connected to VCC (3.3V) or GND:
+// CE (TRX_EN) -> VCC
+// TXE (TX_EN) -> GND
+// PWR -> VCC
+
+// The nRF905 will always be in low-power receive mode, waiting for packets from sensor nodes.
 
 #include <nRF905.h>
 #include <SPI.h>
 #include <LowPower.h>
 
 #define BASE_STATION_ADDR	0xE7E7E7E7
-#define LED					A5
 #define PAYLOAD_SIZE		NRF905_MAX_PAYLOAD
+#define LED					A5
+
+#define PACKET_NONE		0
+#define PACKET_OK		1
+#define PACKET_INVALID	2
 
 nRF905 transceiver = nRF905();
 
@@ -31,18 +42,18 @@ void nRF905_int_dr(){transceiver.interrupt_dr();}
 
 void nRF905_onRxComplete(nRF905* device)
 {
-	packetStatus = 1;
+	packetStatus = PACKET_OK;
 }
 
 void nRF905_onRxInvalid(nRF905* device)
 {
-	packetStatus = 2;
+	packetStatus = PACKET_INVALID;
 }
 
 void setup()
 {
 	Serial.begin(115200);
-	Serial.println(F("Client started"));
+	Serial.println(F("Base station starting..."));
 	
 	pinMode(LED, OUTPUT);
 
@@ -78,15 +89,17 @@ void setup()
 
 	// Register event functions
 	// NOTE: In interrupt mode these events will run from the interrupt, so any global variables accessed inside the event function should be declared 'volatile'.
-	// Also avoid doing things that take a long time to complete (delay()) and avoid using things that rely on interrupts (millis(), Serial.print()).
+	// Also avoid doing things in the event functions that take a long time to complete or things that rely on interrupts (delay(), millis(), Serial.print())).
 	transceiver.events(
 		nRF905_onRxComplete,
 		nRF905_onRxInvalid,
 		NULL,
 		NULL
 	);
-	
+
 	transceiver.setLowRxPower(true);
+
+	Serial.println(F("Base station started"));
 }
 
 void loop()
@@ -96,12 +109,18 @@ void loop()
 	static uint32_t badData;
 
 	digitalWrite(LED, HIGH);
+	
+	// Atomically copy volatile global variable to local variable since the radio is still in RX mode and another packet could come in at any moment
+	noInterrupts();
+	uint8_t pktStatus = packetStatus;
+	packetStatus = PACKET_NONE;
+	interrupts();
 
-	if(packetStatus == 0)
+	if(pktStatus == PACKET_NONE)
 	{
 		Serial.println("Woke for no reason?");
 	}
-	else if(packetStatus == 2)
+	else if(pktStatus == PACKET_INVALID)
 	{
 		Serial.println("Invalid packet");
 		invalids++;
@@ -124,6 +143,20 @@ void loop()
 			Serial.print(buffer[i], DEC);
 		}
 		Serial.println();
+
+		Serial.print(F("Analog values: "));
+		Serial.print(buffer[4]<<8 | buffer[5]);
+		Serial.print(F(" "));
+		Serial.print(buffer[6]<<8 | buffer[7]);
+		Serial.print(F(" "));
+		Serial.println(buffer[8]<<8 | buffer[9]);
+		
+		Serial.print(F("Digital values: "));
+		Serial.print(buffer[1]);
+		Serial.print(F(" "));
+		Serial.print(buffer[2]);
+		Serial.print(F(" "));
+		Serial.println(buffer[3]);
 		
 		good++;
 	}
@@ -142,5 +175,6 @@ void loop()
 	digitalWrite(LED, LOW);
 
 	// Sleep
-	LowPower.powerDown(SLEEP_FOREVER, ADC_OFF, BOD_OFF);
+	if(packetStatus == PACKET_NONE) // Make sure no new packets were received while since the last wake
+		LowPower.powerDown(SLEEP_FOREVER, ADC_OFF, BOD_OFF);
 }

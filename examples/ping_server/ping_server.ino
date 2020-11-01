@@ -49,6 +49,8 @@ void setup()
 {
 	Serial.begin(115200);
 
+	Serial.println(F("Server starting..."));
+
 	pinMode(LED, OUTPUT);
 
 	// This must be called first

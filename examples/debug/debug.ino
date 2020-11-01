@@ -76,15 +76,15 @@ void loop()
 	uint16_t channel = ((uint16_t)(regs[1] & 0x01)<<8) | regs[0];
 	uint32_t freq = (422400UL + (channel * 100UL)) * (1 + ((regs[1] & ~NRF905_MASK_BAND) >> 1));
 
-	Serial.print(F("Channel: "));
+	Serial.print(F("Channel:          "));
 	Serial.println(channel);
-	Serial.print(F("Freq: "));
+	Serial.print(F("Freq:             "));
 	Serial.print(freq);
-	Serial.println(F("KHz"));
-	Serial.print(F("Auto retransmit: "));
-	Serial.println(!!(regs[1] & ~NRF905_MASK_AUTO_RETRAN));
-	Serial.print(F("Low power RX: "));
-	Serial.println(!!(regs[1] & ~NRF905_MASK_LOW_RX));
+	Serial.println(F(" KHz"));
+	Serial.print(F("Auto retransmit:  "));
+	Serial.println((regs[1] & ~NRF905_MASK_AUTO_RETRAN) ? F("Enabled") : F("Disabled"));
+	Serial.print(F("Low power RX:     "));
+	Serial.println((regs[1] & ~NRF905_MASK_LOW_RX) ? F("Enabled") : F("Disabled"));
 
 	// TX power
 	data = regs[1] & ~NRF905_MASK_PWR;
@@ -106,9 +106,9 @@ void loop()
 			data = -127;
 			break;
 	}
-	Serial.print(F("TX Power: "));
+	Serial.print(F("TX Power:         "));
 	Serial.print((signed char)data);
-	Serial.println(F("dBm"));
+	Serial.println(F(" dBm"));
 
 	// Freq band
 	data = regs[1] & ~NRF905_MASK_BAND;
@@ -121,29 +121,29 @@ void loop()
 			str = (char*)"868/915";
 			break;
 	}
-	Serial.print(F("Band: "));
+	Serial.print(F("Band:             "));
 	Serial.print(str);
-	Serial.println(F("MHz"));
+	Serial.println(F(" MHz"));
 
 	Serial.print(F("TX Address width: "));
 	Serial.println(regs[2] >> 4);
 	Serial.print(F("RX Address width: "));
 	Serial.println(regs[2] & 0x07);
 
-	Serial.print(F("RX Payload size: "));
+	Serial.print(F("RX Payload size:  "));
 	Serial.println(regs[3]);
-	Serial.print(F("TX Payload size: "));
+	Serial.print(F("TX Payload size:  "));
 	Serial.println(regs[4]);
 
-	Serial.print(F("RX Address [0]: "));
+	Serial.print(F("RX Address [0]:   "));
 	Serial.println(regs[5]);
-	Serial.print(F("RX Address [1]: "));
+	Serial.print(F("RX Address [1]:   "));
 	Serial.println(regs[6]);
-	Serial.print(F("RX Address [2]: "));
+	Serial.print(F("RX Address [2]:   "));
 	Serial.println(regs[7]);
-	Serial.print(F("RX Address [3]: "));
+	Serial.print(F("RX Address [3]:   "));
 	Serial.println(regs[8]);
-	Serial.print(F("RX Address: "));
+	Serial.print(F("RX Address:       "));
 	Serial.println(((unsigned long)regs[8]<<24 | (unsigned long)regs[7]<<16 | (unsigned long)regs[6]<<8 | (unsigned long)regs[5]));
 
 	// CRC mode
@@ -151,16 +151,16 @@ void loop()
 	switch(data)
 	{
 		case NRF905_CRC_16:
-			str = "16bit";
+			str = (char*)"16 bit";
 			break;
 		case NRF905_CRC_8:
-			str = "8bit";
+			str = (char*)"8 bit";
 			break;
 		default:
-			str = "Disabled";
+			str = (char*)"Disabled";
 			break;
 	}
-	Serial.print(F("CRC Mode: "));
+	Serial.print(F("CRC Mode:         "));
 	Serial.println(str);
 
 	// Xtal freq
@@ -186,31 +186,31 @@ void loop()
 			data = 0;
 			break;
 	}
-	Serial.print(F("Xtal freq: "));
+	Serial.print(F("Xtal freq:        "));
 	Serial.print(data);
-	Serial.println("MHz");
+	Serial.println(" MHz");
 
 	// Clock out freq
 	data = regs[9] & ~NRF905_MASK_OUTCLK;
 	switch(data)
 	{
 		case NRF905_OUTCLK_4MHZ:
-			str = "4MHz";
+			str = (char*)"4 MHz";
 			break;
 		case NRF905_OUTCLK_2MHZ:
-			str = "2MHz";
+			str = (char*)"2 MHz";
 			break;
 		case NRF905_OUTCLK_1MHZ:
-			str = "1MHz";
+			str = (char*)"1 MHz";
 			break;
 		case NRF905_OUTCLK_500KHZ:
-			str = "500KHz";
+			str = (char*)"500 KHz";
 			break;
 		default:
-			str = "Disabled";
+			str = (char*)"Disabled";
 			break;
 	}
-	Serial.print(F("Clock out freq: "));
+	Serial.print(F("Clock out freq:   "));
 	Serial.println(str);
 
 	Serial.println(F("---------------------"));

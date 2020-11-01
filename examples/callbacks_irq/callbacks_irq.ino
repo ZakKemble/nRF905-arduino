@@ -6,6 +6,10 @@
  * Web: http://blog.zakkemble.co.uk/nrf905-avrarduino-librarydriver/
  */
 
+//
+// DONT USE THIS EXAMPLE, IT STILL NEEDS TO BE UPDATED FOR THE NEW VERSION OF THE NRF905 LIBRARY (v4)
+//
+
 /*
  * Example showing all callbacks and turning IRQ off and on
  */
