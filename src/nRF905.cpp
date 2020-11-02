@@ -13,6 +13,10 @@
 #include "nRF905_config.h"
 #include "nRF905_defs.h"
 
+#if defined(ESP32)
+	#warning "ESP32 platforms don't seem to have a way of disabling and enabling interrupts. Try to avoid accessing the SPI bus from within the nRF905 event functions. That is, don't read the payload from inside the rxComplete event and make sure to connect the AM pin. See https://github.com/zkemble/nRF905-arduino/issues/1"
+#endif
+
 static const uint8_t config[] PROGMEM = {
 	NRF905_CMD_W_CONFIG,
 	NRF905_CHANNEL,
