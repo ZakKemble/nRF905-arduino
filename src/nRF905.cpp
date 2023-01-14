@@ -183,12 +183,7 @@ bool nRF905::addressMatched()
 	return digitalRead(am);
 }
 
-nRF905::nRF905()
-{
-}
-
 void nRF905::begin(
-	SPIClass spi,
 	uint32_t spiClock,
 	int csn,
 	int trx,
@@ -201,7 +196,8 @@ void nRF905::begin(
 	void (*callback_interrupt_am)()
 )
 {
-	this->spi = spi;
+	this->spi.begin();
+
 	this->spiSettings = SPISettings(spiClock, MSBFIRST, SPI_MODE0);
 
 	this->csn = csn;
