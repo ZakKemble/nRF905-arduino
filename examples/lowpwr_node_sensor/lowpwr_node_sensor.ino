@@ -27,7 +27,8 @@
 #define NODE_ID				78
 #define LED					A5
 
-nRF905 transceiver = nRF905();
+// Provide SPI bus to use (SPI, SPI1, SPI2 etc)
+nRF905 transceiver = nRF905(SPI);
 
 static bool txDone; // NOTE: In polling mode this does not need to be volatile
 
@@ -56,14 +57,10 @@ void setup()
 	//digitalWrite(9, HIGH);
 	
 	
-	// This must be called first
-	SPI.begin();
-
 	// Minimal wires (polling mode)
 	// Up to 5 wires can be disconnected, however this will reduce functionalliy and will put the library into polling mode instead of interrupt mode.
 	// In polling mode the .poll() method must be called as often as possible. If .poll() is not called often enough then events may be missed.
 	transceiver.begin(
-		SPI,
 		10000000,
 		6,
 		NRF905_PIN_UNUSED, // CE (standby) pin must be connected to VCC (3.3V)
