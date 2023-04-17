@@ -26,7 +26,8 @@
 #define LED				A5
 #define PAYLOAD_SIZE	NRF905_MAX_PAYLOAD // 32
 
-nRF905 transceiver = nRF905();
+// Provide SPI bus to use (SPI, SPI1, SPI2 etc)
+nRF905 transceiver = nRF905(SPI);
 
 static volatile uint8_t packetStatus;
 
@@ -60,12 +61,8 @@ void setup()
 	//pinMode(7, OUTPUT);
 	//digitalWrite(7, HIGH);
 	
-	// This must be called first
-	SPI.begin();
-
 	// All wires, maximum functionality
 	transceiver.begin(
-		SPI, // SPI bus to use (SPI, SPI1, SPI2 etc)
 		10000000, // SPI Clock speed (10MHz)
 		6, // SPI SS
 		7, // CE (standby)

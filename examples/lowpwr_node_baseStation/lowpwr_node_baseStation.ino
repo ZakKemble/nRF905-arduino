@@ -34,7 +34,8 @@
 #define PACKET_OK		1
 #define PACKET_INVALID	2
 
-nRF905 transceiver = nRF905();
+// Provide SPI bus to use (SPI, SPI1, SPI2 etc)
+nRF905 transceiver = nRF905(SPI);
 
 static volatile uint8_t packetStatus; // NOTE: In interrupt mode this must be volatile
 
@@ -69,12 +70,8 @@ void setup()
 	//digitalWrite(9, LOW);
 	
 	
-	// This must be called first
-	SPI.begin();
-
 	// Minimal wires (interrupt mode)
 	transceiver.begin(
-		SPI,
 		10000000,
 		6,
 		NRF905_PIN_UNUSED, // CE (standby) pin must be connected to VCC (3.3V)

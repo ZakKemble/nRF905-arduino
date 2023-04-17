@@ -99,7 +99,7 @@ typedef enum
 class nRF905 //: public Stream // TODO see Wire library
 {
 private:
-	SPIClass spi;
+	SPIClass &spi;
 	SPISettings spiSettings;
 
 #if defined(ESP32) || defined(ESP8266)
@@ -148,7 +148,7 @@ public:
 	virtual void flush();
 	using Print::write;*/
 
-	nRF905();
+	nRF905(SPIClass& spi): spi(spi) {};
 
 /**
 * @brief Initialise, must be called after SPI.begin() and before any other nRF905 stuff
@@ -176,7 +176,6 @@ public:
 * @return (none)
 */
 	void begin(
-		SPIClass spi,
 		uint32_t spiClock,
 		int csn,
 		int trx,

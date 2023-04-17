@@ -14,7 +14,13 @@
 #include <nRF905_defs.h>
 #include <SPI.h>
 
-nRF905 transceiver = nRF905();
+// Provide SPI bus to use (SPI, SPI1, SPI2 etc)
+nRF905 transceiver = nRF905(SPI);
+
+// NOTE: If you want to use another SPI bus on an ESP (which uses the VSPI bus by default) - you can initiate the library like this:
+// Also don't forget to uncomment the above initialization line!
+// SPIClass dSPI(HSPI);
+// nRF905 transceiver = nRF905(dSPI);
 
 // Don't modify these 2 functions. They just pass the DR/AM interrupt to the correct nRF905 instance.
 void nRF905_int_dr(){transceiver.interrupt_dr();}
@@ -24,10 +30,7 @@ void setup()
 {
 	Serial.begin(115200);
 
-	SPI.begin();
-
 	transceiver.begin(
-		SPI, // SPI bus to use (SPI, SPI1, SPI2 etc)
 		10000000, // SPI Clock speed (10MHz)
 		6, // SPI SS
 		7, // CE (standby)
